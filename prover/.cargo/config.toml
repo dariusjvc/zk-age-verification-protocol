@@ -1,0 +1,5 @@
+[target.x86_64-unknown-linux-gnu]
+# Workaround for rust-lld + wasmer unresolved __rust_probestack in release mode.
+# Force GNU ld via gcc instead of lld.
+# Combined with prover/rust-toolchain.toml to avoid rustc 1.94 ICE on ark-circom.
+rustflags = ["-C", "link-arg=-fuse-ld=bfd"]

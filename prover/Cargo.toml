@@ -1,0 +1,53 @@
+[package]
+name    = "vc-age-prover"
+version = "0.1.0"
+edition = "2021"
+description = "Native Groth16 prover service for age verification ZKP"
+
+[[bin]]
+name = "vc-age-prover"
+path = "src/main.rs"
+
+[dependencies]
+# HTTP framework
+axum       = { version = "0.7",  features = ["json"] }
+tower      = "0.4"
+tower-http = { version = "0.5",  features = ["cors", "trace"] }
+
+# Async runtime
+tokio     = { version = "1",     features = ["full"] }
+
+# Serialization
+serde      = { version = "1",    features = ["derive"] }
+serde_json = "1"
+
+# ZKP — arkworks ecosystem
+ark-ff       = { version = "0.5", default-features = false }
+ark-bn254    = { version = "0.5", default-features = false, features = ["r1cs"] }
+ark-groth16  = { version = "0.5", default-features = false }
+ark-snark    = { version = "0.5", default-features = false }
+ark-circom   = { version = "0.5" }
+ark-relations = { version = "0.5", default-features = false }
+ark-std      = { version = "0.5", default-features = false }
+
+# Bignum for field element conversion
+num-bigint  = { version = "0.4", features = ["serde"] }
+num-traits  = "0.2"
+
+# Error handling
+thiserror = "1"
+anyhow    = "1"
+
+# Logging / tracing
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Random number generation (for proving key generation in tests)
+rand = "0.8"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[profile.release]
+opt-level   = 3
+codegen-units = 1

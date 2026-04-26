@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline'; worker-src blob:; connect-src 'self' http://localhost:3001 http://localhost:8080 http://127.0.0.1:3001;" />
+  <title>ZK Age Verification</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #475569;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; text-align: center; }
+    h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
+    p.subtitle { color: var(--text-muted); text-align: center; margin-bottom: 2rem; }
+
+    .container { width: 100%; max-width: 640px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-right: 0.5rem;
+    }
+
+    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    input[type="date"], input[type="text"] {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    input:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--primary-dark); }
+    button:disabled { background: var(--surface2); color: var(--text-muted); cursor: not-allowed; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .status-badge.pending  { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .status-badge.success  { background: rgba(34,197,94,0.15);  color: var(--success); }
+    .status-badge.error    { background: rgba(239,68,68,0.15);   color: var(--error); }
+    .status-badge.idle     { background: rgba(148,163,184,0.1);  color: var(--text-muted); }
+
+    .log {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 0.75rem;
+    }
+    .log .entry { margin-bottom: 0.2rem; }
+    .log .entry.ok   { color: var(--success); }
+    .log .entry.err  { color: var(--error); }
+    .log .entry.info { color: #93c5fd; }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+    #verified-banner {
+      display: none;
+      padding: 1.25rem;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid var(--success);
+      border-radius: var(--radius);
+      text-align: center;
+      color: var(--success);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 ZK Age Verification</h1>
+    <p class="subtitle">
+      Prove you are 18+ using a Zero-Knowledge Proof — no birth date revealed on-chain.
+    </p>
+
+    <div id="verified-banner">✅ Age verified on-chain! No birth date was revealed.</div>
+
+    <!-- Step 1: Connect Wallet -->
+    <div class="card">
+      <h2><span class="step-badge">1</span>Connect Wallet</h2>
+      <button id="btn-connect">Connect MetaMask</button>
+      <div id="wallet-status" style="margin-top:0.6rem">
+        <span class="status-badge idle">Not connected</span>
+      </div>
+    </div>
+
+    <!-- Step 2: Enter Birth Date & Get VC -->
+    <div class="card">
+      <h2><span class="step-badge">2</span>Get Verifiable Credential</h2>
+      <label for="birth-date">Date of Birth</label>
+      <input type="date" id="birth-date" max="" />
+      <button id="btn-issue-vc">Request Credential from Issuer</button>
+      <div id="vc-status" style="margin-top:0.6rem">
+        <span class="status-badge idle">No credential yet</span>
+      </div>
+    </div>
+
+    <!-- Step 3: Generate ZK Proof -->
+    <div class="card">
+      <h2><span class="step-badge">3</span>Generate Zero-Knowledge Proof</h2>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem">
+        A random secret is generated locally and never leaves your browser.
+        Your birth date is proven without being revealed.
+      </p>
+      <button id="btn-generate-proof" disabled>Generate ZK Proof</button>
+      <div id="proof-status" style="margin-top:0.6rem">
+        <span class="status-badge idle">Waiting for credential</span>
+      </div>
+      <div class="log" id="proof-log" style="display:none"></div>
+    </div>
+
+    <!-- Step 4: Submit to Ethereum -->
+    <div class="card">
+      <h2><span class="step-badge">4</span>Submit Proof On-Chain</h2>
+      <button id="btn-submit-proof" disabled>Submit to Ethereum</button>
+      <div id="submit-status" style="margin-top:0.6rem">
+        <span class="status-badge idle">Waiting for proof</span>
+      </div>
+      <div class="log" id="submit-log" style="display:none"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

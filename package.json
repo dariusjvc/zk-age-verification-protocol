@@ -1,0 +1,31 @@
+{
+  "name": "vc-age-verification",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Privacy-preserving age verification using Verifiable Credentials, ZKP (Groth16), and Ethereum",
+  "workspaces": [
+    "circuits",
+    "contracts",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd prover && cargo fetch",
+    "build:circuit": "cd circuits && bash scripts/compile.sh && bash scripts/setup.sh",
+    "build:contracts": "cd contracts && npm run compile",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:prover": "cd prover && cargo build --release",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:prover": "cd prover && cargo run",
+    "test:contracts": "cd contracts && npm test",
+    "lint": "eslint '**/*.ts' --ignore-pattern 'node_modules' --ignore-pattern 'dist'"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0"
+  }
+}

@@ -1,0 +1,45 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+contracts/ignition/deployments/
+
+# Circuit build artifacts
+circuits/build/
+circuits/pot*/
+circuits/*.ptau
+circuits/*.zkey
+circuits/*.json
+
+# Rust
+prover/target/
+
+# Snarkjs
+*.ptau
+*.zkey
+*.wtns
+
+# Keys (NEVER commit these)
+*.pem
+*.key
+issuer-private-key.json
+deployment-addresses.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
