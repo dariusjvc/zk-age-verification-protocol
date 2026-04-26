@@ -4,16 +4,53 @@ A privacy-preserving age verification system that combines **Verifiable Credenti
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FLOW OVERVIEW                           │
-│                                                                 │
-│  1. Issuer creates & signs a VC (off-chain, TypeScript)        │
-│  2. Issuer registers commitment on-chain (Solidity)            │
-│  3. User generates ZK proof using birth date + secret (Rust)   │
-│  4. User submits proof to AgeRegistry contract (TypeScript)    │
-│  5. Contract verifies proof & records attestation (Solidity)   │
-└─────────────────────────────────────────────────────────────────┘
+**Privacy-Preserving Age Verification using ZK Proofs & Verifiable Credentials**
+
+Trust model: Trusted VC Issuer. Trustless On-chain Verification.
+
+```mermaid
+flowchart LR
+	User[Holder Wallet]
+
+	subgraph Step1[1. Verifiable Credential Issuance]
+		UI[Client App\nWallet-connected dApp]
+		Issuer[VC Issuer API\nDID + signed VC]
+	end
+
+	subgraph Step2[2. Zero-Knowledge Proving]
+		Prover[Browser Prover\nsnarkjs + WASM]
+		Circuit[Circom Circuit\nwasm + zkey]
+	end
+
+	subgraph Step3[3. On-chain Verification]
+		Commitment[CommitmentRegistry]
+		AgeRegistry[AgeRegistry]
+		Verifier[Groth16 Verifier]
+	end
+
+	User --> UI
+	UI -->|holder data| Issuer
+	Issuer -->|signed VC| UI
+
+	UI -->|private inputs| Prover
+	Circuit -->|proof artifacts| Prover
+	Prover -->|proof π + commitment + nullifier| UI
+
+	UI -->|register commitment| Commitment
+	Commitment -. commitment lookup .-> AgeRegistry
+	UI -->|submit proof π + nullifier| AgeRegistry
+	AgeRegistry -->|verify proof| Verifier
+	AgeRegistry -->|verified status| UI
+
+	classDef user fill:#e0f2fe,stroke:#0369a1,color:#0f172a;
+	classDef ssi fill:#dcfce7,stroke:#15803d,color:#0f172a;
+	classDef zk fill:#fef3c7,stroke:#b45309,color:#0f172a;
+	classDef chain fill:#fee2e2,stroke:#b91c1c,color:#0f172a;
+
+	class User user;
+	class UI,Issuer ssi;
+	class Prover,Circuit zk;
+	class Commitment,AgeRegistry,Verifier chain;
 ```
 
 ### ZKP Circuit (Circom)
@@ -31,7 +68,7 @@ The circuit proves (without revealing the birth date):
 | `AgeRegistry` | Main contract: verifies proof + records attestation with expiry |
 
 ### Rust Prover Service
-REST API (`axum`) that wraps `ark-circom` + `ark-groth16` to generate proofs natively. Faster than browser-side snarkjs for batch or server-side proving.
+REST API (`axum`) that wraps `ark-circom` + `ark-groth16` to generate proofs natively. In the current demo, the main proving flow runs in the browser, while the Rust prover remains available for alternative server-side or batch proving.
 
 ### TypeScript Backend (VC Issuer)
 Express server that:
@@ -42,7 +79,7 @@ Express server that:
 ### TypeScript Frontend
 Vite + vanilla TS app that:
 - Reads user's VC
-- Computes ZKP witness via snarkjs
+- Computes the ZKP witness and proof in the browser via `snarkjs`
 - Submits proof to Ethereum (via ethers.js)
 
 ---
