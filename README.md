@@ -1,12 +1,16 @@
 # VC Age Verification with ZKP + Ethereum
 
+![Build](https://img.shields.io/badge/build-local%20passing-22c55e)
+![Tests](https://img.shields.io/badge/tests-backend%20%2B%20contracts%20passing-22c55e)
+![Solidity](https://img.shields.io/badge/Solidity-0.8.19-363636?logo=solidity)
+![Rust](https://img.shields.io/badge/Rust-1.82%2B-000000?logo=rust)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)
+
 A privacy-preserving age verification system that combines **Verifiable Credentials (W3C VCs)**, **Zero-Knowledge Proofs (Groth16/BN254)**, and **Ethereum Smart Contracts** to prove "I am 18+" without revealing the actual birth date.
 
 ## Architecture
 
 **Privacy-Preserving Age Verification using ZK Proofs & Verifiable Credentials**
-
-Trust model: Trusted VC Issuer. Trustless On-chain Verification.
 
 ```mermaid
 flowchart LR
@@ -52,6 +56,21 @@ flowchart LR
 	class Prover,Circuit zk;
 	class Commitment,AgeRegistry,Verifier chain;
 ```
+
+## Trust Model
+
+- Trusted VC Issuer: the issuer signs verifiable credentials and authorizes the holder's commitment.
+- Trustless On-chain Verification: Ethereum contracts verify the Groth16 proof and record the verification result without relying on the issuer at verification time.
+
+## Demo
+
+### Architecture Diagram
+
+![Architecture Diagram](docs/screenshots/architecture-diagram.png)
+
+### Frontend Demo
+
+![Frontend Demo](docs/screenshots/frontend-demo.png)
 
 ### ZKP Circuit (Circom)
 The circuit proves (without revealing the birth date):

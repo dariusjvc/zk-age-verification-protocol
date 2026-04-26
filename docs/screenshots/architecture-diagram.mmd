@@ -1,0 +1,42 @@
+flowchart LR
+    User[Holder Wallet]
+
+    subgraph Step1[1. Verifiable Credential Issuance]
+        UI[Client App\nWallet-connected dApp]
+        Issuer[VC Issuer API\nDID + signed VC]
+    end
+
+    subgraph Step2[2. Zero-Knowledge Proving]
+        Prover[Browser Prover\nsnarkjs + WASM]
+        Circuit[Circom Circuit\nwasm + zkey]
+    end
+
+    subgraph Step3[3. On-chain Verification]
+        Commitment[CommitmentRegistry]
+        AgeRegistry[AgeRegistry]
+        Verifier[Groth16 Verifier]
+    end
+
+    User --> UI
+    UI -->|holder data| Issuer
+    Issuer -->|signed VC| UI
+
+    UI -->|private inputs| Prover
+    Circuit -->|proof artifacts| Prover
+    Prover -->|proof π + commitment + nullifier| UI
+
+    UI -->|register commitment| Commitment
+    Commitment -. commitment lookup .-> AgeRegistry
+    UI -->|submit proof π + nullifier| AgeRegistry
+    AgeRegistry -->|verify proof| Verifier
+    AgeRegistry -->|verified status| UI
+
+    classDef user fill:#e0f2fe,stroke:#0369a1,color:#0f172a;
+    classDef ssi fill:#dcfce7,stroke:#15803d,color:#0f172a;
+    classDef zk fill:#fef3c7,stroke:#b45309,color:#0f172a;
+    classDef chain fill:#fee2e2,stroke:#b91c1c,color:#0f172a;
+
+    class User user;
+    class UI,Issuer ssi;
+    class Prover,Circuit zk;
+    class Commitment,AgeRegistry,Verifier chain;
